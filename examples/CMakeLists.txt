@@ -4,7 +4,7 @@ project(example LANGUAGES CXX)
 
 # find main package if the example project is being build independentle
 if(${CMAKE_PROJECT_NAME} STREQUAL ${PROJECT_NAME})
-    find_package(PROJECT_NAME_HERE REQUIRED)
+    find_package(thread_testing REQUIRED)
 endif()
 
 add_executable(${PROJECT_NAME} example.cpp)
@@ -17,5 +17,5 @@ target_include_directories(
 
 target_link_libraries(
     ${PROJECT_NAME}
-    # PROJECT_NAME_HERE
+    thread_testing
 )

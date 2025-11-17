@@ -1,18 +1,14 @@
 cmake_minimum_required(VERSION 3.8)
 
-project(PROJECT_NAME_HERE LANGUAGES CXX)
+project(thread_testing LANGUAGES CXX)
+
+find_package(Threads REQUIRED)
 
 # ================== Sources ==================
-# choose one:
-add_executable(
-    ${PROJECT_NAME}
-    # add sources here
-)
-
 add_library(
     ${PROJECT_NAME}
     SHARED
-    # add sources here
+        src/thread_testing.cpp
 )
 
 # ================== Headers ==================
@@ -27,7 +23,7 @@ target_include_directories(
 target_link_libraries(
     ${PROJECT_NAME}
     PUBLIC
-    # add dependencies here
+    Threads::Threads
 )
 
 # ================== Srip outputs if in release ==================
