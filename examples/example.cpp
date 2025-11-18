@@ -1,3 +1,4 @@
+#include <PersistentThread.hpp>
 #include <ThreadPool.hpp>
 #include <filesystem>
 #include <iostream>
@@ -7,6 +8,15 @@
 #include <vector>
 
 using namespace std;
+
+string operation(double a, double b) {
+  auto result = a * b;
+  const auto id = this_thread::get_id();
+  stringstream ss;
+  ss << id << ": " << a << " * " << b << " = " << result << endl;
+  return ss.str();
+}
+
 void poolOperation() {
   std::this_thread::sleep_for(1000ms);
   const auto id = this_thread::get_id();
@@ -17,7 +27,14 @@ void poolOperation() {
 }
 
 int main(int argc, char *argv[]) {
+  PersistentThread<string, double, double> thread(&operation);
 
+  auto resultFuture = thread.enqueue(1.5, 2.5);
+  auto resultFuture2 = thread.enqueue(1, 2.5);
+  auto resultFuture3 = thread.enqueue(2.5, 2.5);
+  osyncstream(cout) << resultFuture3.get();
+  osyncstream(cout) << resultFuture.get();
+  osyncstream(cout) << resultFuture2.get();
 
   ThreadPool pool(2);
   auto p = pool.enqueue(&poolOperation);
