@@ -2,13 +2,15 @@ cmake_minimum_required(VERSION 3.8)
 
 project(thread_testing LANGUAGES CXX)
 
+set(CMAKE_CXX_STANDARD 20)
+
 find_package(Threads REQUIRED)
 
 # ================== Sources ==================
 add_library(
     ${PROJECT_NAME}
     SHARED
-        src/thread_testing.cpp
+        src/ThreadPool.cpp
 )
 
 # ================== Headers ==================

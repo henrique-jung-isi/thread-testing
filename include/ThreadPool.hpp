@@ -2,7 +2,6 @@
 #include <condition_variable>
 #include <functional>
 #include <future>
-#include <iostream>
 #include <mutex>
 #include <queue>
 #include <thread>
@@ -12,20 +11,19 @@ using Promise = std::promise<void>;
 using PromisePtr = std::unique_ptr<Promise>;
 using Future = std::future<void>;
 
-struct Task {
-  Operation operation;
-  PromisePtr promise{std::make_unique<Promise>()};
-};
-
-class ThreadTesting {
+class ThreadPool {
 public:
-  ThreadTesting(size_t num_threads = std::thread::hardware_concurrency());
+  ThreadPool(size_t num_threads = std::thread::hardware_concurrency());
 
-  ~ThreadTesting();
+  ~ThreadPool();
 
   Future enqueue(const Operation &operation);
 
 private:
+  struct Task {
+    Operation operation;
+    PromisePtr promise{std::make_unique<Promise>()};
+  };
   std::vector<std::thread> _threads;
   std::queue<Task> _tasks;
   std::mutex _queue_mutex;
