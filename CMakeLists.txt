@@ -11,6 +11,7 @@ add_library(
     ${PROJECT_NAME}
     SHARED
         src/ThreadPool.cpp
+        src/AnotherPersistentThread.cpp
 )
 
 # ================== Headers ==================

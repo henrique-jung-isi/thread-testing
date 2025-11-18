@@ -1,3 +1,4 @@
+#include <AnotherPersistentThread.hpp>
 #include <PersistentThread.hpp>
 #include <ThreadPool.hpp>
 #include <filesystem>
@@ -8,6 +9,7 @@
 #include <vector>
 
 using namespace std;
+// template class AnotherPersistentThread<string, double, double>;
 
 string operation(double a, double b) {
   auto result = a * b;
@@ -41,6 +43,15 @@ int main(int argc, char *argv[]) {
   auto p3 = pool.enqueue(&poolOperation);
   p3.wait();
   p.wait();
+
+  // Does not work: undefined reference
+  // AnotherPersistentThread<string, double, double> anotherThread(&operation);
+  // auto anotherResult = anotherThread.enqueue(1.5, 2.5);
+  // auto anotherResult2 = thread.enqueue(1, 2.5);
+  // auto anotherResult3 = thread.enqueue(2.5, 2.5);
+  // osyncstream(cout) << anotherResult3.get();
+  // osyncstream(cout) << anotherResult.get();
+  // osyncstream(cout) << anotherResult2.get();
 
   return 0;
 }
