@@ -11,6 +11,17 @@
 using namespace std;
 // template class AnotherPersistentThread<string, double, double>;
 
+struct Example {
+  string operation(double a, double b) {
+    auto result = a * b;
+    const auto id = this_thread::get_id();
+    stringstream ss;
+    ss << "From Example " << id << ": " << a << " * " << b << " = " << result
+       << endl;
+    return ss.str();
+  }
+};
+
 string operation(double a, double b) {
   auto result = a * b;
   const auto id = this_thread::get_id();
@@ -43,6 +54,12 @@ int main(int argc, char *argv[]) {
   auto p3 = pool.enqueue(&poolOperation);
   p3.wait();
   p.wait();
+
+  Example e;
+  PersistentThread<string, double, double> memberThread(
+      [&e](double a, double b) { return e.operation(a, b); });
+  auto memberFuture = memberThread.enqueue(1.5, 2.5);
+  osyncstream(cout) << memberFuture.get();
 
   // Does not work: undefined reference
   // AnotherPersistentThread<string, double, double> anotherThread(&operation);
