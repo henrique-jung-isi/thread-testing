@@ -1,16 +1,16 @@
-# isisim-cmake-template
+# Exemplo de threads persistentes em c++
 
-Template para projetos cmake que podem ser instalados e utilizados como alvos de `find_package`.
+Este exemplo apresenta duas abordagens para implementar threads persistentes em c++.
 
-[CMakeLists](CMakeLists.txt#L3) deve ser alterado para conter o nome do projeto.
+## Por que persistente?
 
-Escolha se o projeto vai criar um [executável](CMakeLists.txt#L7) ou uma [biblioteca](CMakeLists.txt#L12), e remova ou renomeie o outro target.
+Threads tem um custo alto para serem criadas, somente colocar um processo recorrente em uma thread para execução irá diminuir a performance, por causa do overhead de criação. Com os exemplos as threads se mantém vivas e somente executam o processo quando necessário.
 
 ## Clonar e configurar o repositório
 
 ```{bash}
-git clone https://github.com/isisim/PROJECT_NAME_HERE
-cd PROJECT_NAME_HERE
+git clone https://github.com/henrique-jung-isi/thread-testing
+cd thread-testing
 mkdir build
 cd build
 cmake .. . -G Ninja 
