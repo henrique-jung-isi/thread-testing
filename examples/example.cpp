@@ -20,6 +20,14 @@ struct Example {
        << endl;
     return ss.str();
   }
+  string operation2(double a, double b) {
+    auto result = a * b;
+    const auto id = this_thread::get_id();
+    stringstream ss;
+    ss << "From Example in Member function " << id << ": " << a << " * " << b
+       << " = " << result << endl;
+    return ss.str();
+  }
 };
 
 string operation(double a, double b) {
@@ -60,6 +68,11 @@ int main(int argc, char *argv[]) {
       [&e](double a, double b) { return e.operation(a, b); });
   auto memberFuture = memberThread.enqueue(1.5, 2.5);
   osyncstream(cout) << memberFuture.get();
+
+  PersistentThread<string, double, double> memberThread2(&Example::operation2,
+                                                         &e);
+  auto memberFuture2 = memberThread2.enqueue(1.5, 2.5);
+  osyncstream(cout) << memberFuture2.get();
 
   // Does not work: undefined reference
   // AnotherPersistentThread<string, double, double> anotherThread(&operation);

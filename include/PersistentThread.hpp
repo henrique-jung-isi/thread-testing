@@ -14,6 +14,15 @@ public:
     _thread = std::thread(&PersistentThread::runtime, this);
   };
 
+  // Constructor for member function pointers
+  template <class Class>
+  PersistentThread(T (Class::*member_func)(Args...), Class *instance)
+      : _operation{[member_func, instance](Args &&...args) {
+          return (instance->*member_func)(std::forward<Args>(args)...);
+        }} {
+    _thread = std::thread(&PersistentThread::runtime, this);
+  };
+
   ~PersistentThread() {
     {
       std::lock_guard lock(_cvMutex);
