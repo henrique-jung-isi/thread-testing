@@ -12,7 +12,7 @@ public:
   PersistentThread(std::function<T(Args...)> &&operation)
       : _operation{operation} {
     _thread = std::thread(&PersistentThread::runtime, this);
-  };
+  }
 
   // Constructor for member function pointers
   template <class Class>
@@ -21,7 +21,7 @@ public:
           return (instance->*member_func)(std::forward<Args>(args)...);
         }} {
     _thread = std::thread(&PersistentThread::runtime, this);
-  };
+  }
 
   ~PersistentThread() {
     {
@@ -30,20 +30,20 @@ public:
     }
     _cv.notify_all();
     _thread.join();
-  };
+  }
 
-  std::future<T> enqueue(Args &&...args) {
+  std::future<T> enqueue(const Args &...args) {
     std::unique_lock lock(_cvMutex);
-    const auto &task = _tasks.emplace(std::forward<Args>(args)...);
+    const auto &task = _tasks.emplace(args...);
     auto future = task.promisePtr->get_future();
     lock.unlock();
     _cv.notify_one();
     return future;
-  };
+  }
 
 private:
   struct Task {
-    Task(Args &&...args) : args(std::forward<Args>(args)...) {}
+    Task(const Args &...args) : args(args...) {}
     std::tuple<Args...> args;
     std::unique_ptr<std::promise<T>> promisePtr{
         std::make_unique<std::promise<T>>()};
@@ -70,7 +70,7 @@ private:
         task.promisePtr->set_exception(std::current_exception());
       }
     }
-  };
+  }
 
   std::function<T(Args...)> _operation;
   std::thread _thread;
