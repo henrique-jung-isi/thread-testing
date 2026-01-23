@@ -1,4 +1,3 @@
-#include <AnotherPersistentThread.hpp>
 #include <PersistentThread.hpp>
 #include <ThreadPool.hpp>
 #include <filesystem>
@@ -73,15 +72,6 @@ int main(int argc, char *argv[]) {
                                                          &e);
   auto memberFuture2 = memberThread2.enqueue(1.5, 2.5);
   osyncstream(cout) << memberFuture2.get();
-
-  // Does not work: undefined reference
-  // AnotherPersistentThread<string, double, double> anotherThread(&operation);
-  // auto anotherResult = anotherThread.enqueue(1.5, 2.5);
-  // auto anotherResult2 = thread.enqueue(1, 2.5);
-  // auto anotherResult3 = thread.enqueue(2.5, 2.5);
-  // osyncstream(cout) << anotherResult3.get();
-  // osyncstream(cout) << anotherResult.get();
-  // osyncstream(cout) << anotherResult2.get();
 
   return 0;
 }

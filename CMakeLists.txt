@@ -9,15 +9,13 @@ find_package(Threads REQUIRED)
 # ================== Sources ==================
 add_library(
     ${PROJECT_NAME}
-    SHARED
-        src/ThreadPool.cpp
-        src/AnotherPersistentThread.cpp
+    INTERFACE
 )
 
 # ================== Headers ==================
 target_include_directories(
     ${PROJECT_NAME}
-    PUBLIC
+    INTERFACE
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:include/${PROJECT_NAME}>
 )
@@ -25,9 +23,11 @@ target_include_directories(
 # ================== Dependecies ==================
 target_link_libraries(
     ${PROJECT_NAME}
-    PUBLIC
+    INTERFACE
     Threads::Threads
 )
+
+target_compile_features(thread_testing INTERFACE cxx_std_17)
 
 # ================== Srip outputs if in release ==================
 if(CMAKE_BUILD_TYPE STREQUAL "Release")
