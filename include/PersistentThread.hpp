@@ -32,9 +32,9 @@ public:
     _thread.join();
   }
 
-  std::future<T> enqueue(const Args &...args) {
+  std::future<T> enqueue(Args &&...args) {
     std::unique_lock lock(_cvMutex);
-    const auto &task = _tasks.emplace(args...);
+    auto &task = _tasks.emplace(std::forward<Args>(args)...);
     auto future = task.promisePtr->get_future();
     lock.unlock();
     _cv.notify_one();
@@ -43,7 +43,7 @@ public:
 
 private:
   struct Task {
-    Task(const Args &...args) : args(args...) {}
+    Task(Args &&...args) : args{std::make_tuple(std::forward<Args>(args)...)} {}
     std::tuple<Args...> args;
     std::unique_ptr<std::promise<T>> promisePtr{
         std::make_unique<std::promise<T>>()};

@@ -5,58 +5,51 @@
 #include <mutex>
 #include <queue>
 #include <thread>
+#include <type_traits>
+#include <utility>
 #include <vector>
-
-using Operation = std::function<void()>;
-using Promise = std::promise<void>;
-using PromisePtr = std::unique_ptr<Promise>;
-using Future = std::future<void>;
 
 class ThreadPool {
 public:
   ThreadPool(size_t num_threads = std::thread::hardware_concurrency());
-
   ~ThreadPool();
 
-  Future enqueue(const Operation &operation);
+  template <class F, class... Args>
+  std::future<typename std::invoke_result_t<F, Args...>>
+  enqueue(F &&f, Args &&...args);
 
 private:
-  struct Task {
-    Operation operation;
-    PromisePtr promise{std::make_unique<Promise>()};
-  };
   std::vector<std::thread> _threads;
-  std::queue<Task> _tasks;
-  std::mutex _queue_mutex;
+  std::queue<std::function<void()>> _tasks;
+  std::mutex _mutex;
   std::condition_variable _cv;
   bool _stop{false};
 };
 
-ThreadPool::ThreadPool(size_t num_threads) {
+inline ThreadPool::ThreadPool(size_t num_threads) {
   for (size_t i = 0; i < num_threads; ++i) {
     _threads.emplace_back([this] {
-      while (true) {
-        std::unique_lock lock(_queue_mutex);
+      for (;;) {
+        std::unique_lock lock(_mutex);
 
         _cv.wait(lock, [this] { return !_tasks.empty() || _stop; });
 
         if (_stop && _tasks.empty()) {
           return;
         }
-        auto [operation, promise] = std::move(_tasks.front());
+        auto task = std::move(_tasks.front());
         _tasks.pop();
         lock.unlock();
 
-        operation();
-        promise->set_value();
+        task();
       }
     });
   }
 }
 
-ThreadPool::~ThreadPool() {
+inline ThreadPool::~ThreadPool() {
   {
-    std::unique_lock<std::mutex> lock(_queue_mutex);
+    std::unique_lock<std::mutex> lock(_mutex);
     _stop = true;
   }
 
@@ -67,12 +60,31 @@ ThreadPool::~ThreadPool() {
   }
 }
 
-Future ThreadPool::enqueue(const Operation &operation) {
-  std::unique_lock lock(_queue_mutex);
-  const auto &task = _tasks.emplace(std::move(Task{operation}));
-  lock.unlock();
+template <class F, class... Args>
+inline std::future<std::invoke_result_t<F, Args...>>
+ThreadPool::enqueue(F &&f, Args &&...args) {
+  using R = std::invoke_result_t<F, Args...>;
 
-  auto future = task.promise->get_future();
+  // Previous approach:
+  // std::bind(std::forward<F>(f), std::forward<Args>(args)...)
+  auto tuple = std::make_tuple(std::forward<Args>(args)...);
+  auto task = std::make_shared<std::packaged_task<R()>>(
+      [f = std::forward<F>(f), args = std::move(tuple)]() mutable {
+        return std::apply(
+            [&f](auto &&...xs) {
+              return std::invoke(f, std::forward<decltype(xs)>(xs)...);
+            },
+            args);
+      });
+
+  auto future = task->get_future();
+  {
+    std::unique_lock lock(_mutex);
+    if (_stop) {
+      throw std::runtime_error("enqueue on stopped ThreadPool");
+    }
+    _tasks.emplace([task]() { (*task)(); });
+  }
   _cv.notify_one();
   return future;
 }

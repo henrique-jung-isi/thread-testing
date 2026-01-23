@@ -56,13 +56,16 @@ int main(int argc, char *argv[]) {
   osyncstream(cout) << resultFuture.get();
   osyncstream(cout) << resultFuture2.get();
 
+  Example e;
   ThreadPool pool(2);
   auto p = pool.enqueue(&poolOperation);
+  auto p2 = pool.enqueue(&Example::operation, &e, 4, 5);
   auto p3 = pool.enqueue(&poolOperation);
+  osyncstream(cout) << p2.get();
   p3.wait();
+
   p.wait();
 
-  Example e;
   PersistentThread<string, double, double> memberThread(
       [&e](double a, double b) { return e.operation(a, b); });
   auto memberFuture = memberThread.enqueue(1.5, 2.5);
