@@ -1,6 +1,7 @@
 #pragma once
 
 #include <condition_variable>
+#include <functional>
 #include <future>
 #include <mutex>
 #include <queue>
@@ -33,48 +34,48 @@ public:
   }
 
   std::future<T> enqueue(Args &&...args) {
-    std::unique_lock lock(_cvMutex);
-    auto &task = _tasks.emplace(std::forward<Args>(args)...);
-    auto future = task.promisePtr->get_future();
-    lock.unlock();
+    auto tuple = std::make_tuple(std::forward<Args>(args)...);
+    auto task = std::make_shared<std::packaged_task<T()>>(
+        [f = _operation, args = std::move(tuple)]() mutable {
+          return std::apply(
+              [&f](auto &&...xs) {
+                return std::invoke(f, std::forward<decltype(xs)>(xs)...);
+              },
+              args);
+        });
+    auto future = task->get_future();
+    {
+      std::unique_lock lock(_cvMutex);
+      if (_stop) {
+        throw std::runtime_error("enqueue on stopped ThreadPool");
+      }
+      _tasks.emplace([task]() { (*task)(); });
+    }
     _cv.notify_one();
     return future;
   }
 
 private:
-  struct Task {
-    Task(Args &&...args) : args{std::make_tuple(std::forward<Args>(args)...)} {}
-    std::tuple<Args...> args;
-    std::unique_ptr<std::promise<T>> promisePtr{
-        std::make_unique<std::promise<T>>()};
-  };
-
   void runtime() {
-    while (true) {
+    for (;;) {
       std::unique_lock lock(_cvMutex);
+
       _cv.wait(lock, [this] { return !_tasks.empty() || _stop; });
+
       if (_stop && _tasks.empty()) {
         return;
       }
       auto task = std::move(_tasks.front());
       _tasks.pop();
       lock.unlock();
-      try {
-        if constexpr (std::is_void_v<T>) {
-          std::apply(_operation, task.args);
-          task.promisePtr->set_value();
-        } else {
-          task.promisePtr->set_value(std::apply(_operation, task.args));
-        }
-      } catch (...) {
-        task.promisePtr->set_exception(std::current_exception());
-      }
+
+      task();
     }
   }
 
   std::function<T(Args...)> _operation;
   std::thread _thread;
-  std::queue<Task> _tasks;
+  std::queue<std::function<void()>> _tasks;
   std::mutex _cvMutex;
   std::condition_variable _cv;
   bool _stop{false};
