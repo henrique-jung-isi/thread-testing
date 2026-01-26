@@ -20,6 +20,19 @@ target_include_directories(
 # ================== Dependencies ==================
 target_link_libraries(${PROJECT_NAME} INTERFACE Threads::Threads)
 
+# Copy headers to build folder so the example works without installing
+file(GLOB headers "${CMAKE_SOURCE_DIR}/include/*")
+set(headersBuildLocation "${CMAKE_BINARY_DIR}/include/${PROJECT_NAME}")
+
+file(COPY ${headers} DESTINATION ${headersBuildLocation})
+add_custom_target(
+    copy_headers
+    ALL
+    COMMAND
+        ${CMAKE_COMMAND} -E copy_if_different ${headers} ${headersBuildLocation}
+    COMMENT "Copying header files to build folder"
+)
+
 # ================== Installation directives ==================
 install(
     TARGETS ${PROJECT_NAME}
@@ -29,7 +42,7 @@ install(
     RUNTIME DESTINATION bin
 )
 
-install(DIRECTORY include DESTINATION include/${PROJECT_NAME})
+install(DIRECTORY include/ DESTINATION include/${PROJECT_NAME})
 
 # ================== directives to enable find_package ==================
 include(GNUInstallDirs)

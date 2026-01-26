@@ -1,5 +1,5 @@
-#include <PersistentThread.hpp>
-#include <ThreadPool.hpp>
+#include <SimpleThreads/PersistentThread.hpp>
+#include <SimpleThreads/ThreadPool.hpp>
 #include <filesystem>
 #include <iostream>
 #include <sstream>
