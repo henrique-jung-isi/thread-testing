@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.8)
 
-project(thread_testing LANGUAGES CXX)
+project(SimpleThreads LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 
