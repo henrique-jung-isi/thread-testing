@@ -1,16 +1,16 @@
-# Exemplo de threads persistentes em c++
+# Simple Threads
 
-Este exemplo apresenta duas abordagens para implementar threads persistentes em c++.
+This is an example of persistent threads and thread pool for c++.
 
-## Por que persistente?
+## Why persistent?
 
-Threads tem um custo alto para serem criadas, somente colocar um processo recorrente em uma thread para execução irá diminuir a performance, por causa do overhead de criação. Com os exemplos as threads se mantém vivas e somente executam o processo quando necessário.
+Threads have a high creation cost, just placing a recurring process in a thread will sometimes lower the performance if the threads are created every time. With this library the threads are kept alive waiting for new information to process.
 
-## Clonar e configurar o repositório
+## Cloning and configuring repository
 
 ```{bash}
-git clone https://github.com/henrique-jung-isi/thread-testing
-cd thread-testing
+git clone https://github.com/henrique-jung-isi/SimpleThreads
+cd SimpleThreads
 mkdir build
 cd build
 cmake .. . -G Ninja 
@@ -20,9 +20,9 @@ cmake --build .
 sudo cmake --install .
 ```
 
-# Desinstalação
+# Uninstallation
 
-Utilize o target `uninstall`. Na pasta principal do projeto utilize o comando:
+Use the target `uninstall`. In the root of the project run:
 
 ```{bash}
 sudo cmake --build build --target uninstall
