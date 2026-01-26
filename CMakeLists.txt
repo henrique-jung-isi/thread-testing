@@ -6,11 +6,8 @@ set(CMAKE_CXX_STANDARD 20)
 
 find_package(Threads REQUIRED)
 
-# ================== Sources ==================
-add_library(
-    ${PROJECT_NAME}
-    INTERFACE
-)
+# interface because the lib is header only
+add_library(${PROJECT_NAME} INTERFACE)
 
 # ================== Headers ==================
 target_include_directories(
@@ -20,34 +17,10 @@ target_include_directories(
         $<INSTALL_INTERFACE:include/${PROJECT_NAME}>
 )
 
-# ================== Dependecies ==================
-target_link_libraries(
-    ${PROJECT_NAME}
-    INTERFACE
-    Threads::Threads
-)
+# ================== Dependencies ==================
+target_link_libraries(${PROJECT_NAME} INTERFACE Threads::Threads)
 
-target_compile_features(thread_testing INTERFACE cxx_std_17)
-
-# ================== Srip outputs if in release ==================
-if(CMAKE_BUILD_TYPE STREQUAL "Release")
-    set_target_properties(${PROJECT_NAME} PROPERTIES LINK_FLAGS "-s")
-endif()
-
-# ================== Copy headers to build folder ==================
-file(GLOB headers "${CMAKE_SOURCE_DIR}/include/*")
-set(headersBuildLocation "${CMAKE_BINARY_DIR}/include/${PROJECT_NAME}")
-
-file(COPY ${headers} DESTINATION ${headersBuildLocation})
-add_custom_target(
-    copy_headers
-    ALL
-    COMMAND
-        ${CMAKE_COMMAND} -E copy_if_different ${headers} ${headersBuildLocation}
-    COMMENT "Copying header files to build folder"
-)
-
-# ================== Instalation directives ==================
+# ================== Installation directives ==================
 install(
     TARGETS ${PROJECT_NAME}
     EXPORT ${PROJECT_NAME}Targets
@@ -56,34 +29,34 @@ install(
     RUNTIME DESTINATION bin
 )
 
-install(DIRECTORY include/ DESTINATION include/${PROJECT_NAME})
+install(DIRECTORY include DESTINATION include/${PROJECT_NAME})
 
-# ================== find_package directives ==================
+# ================== directives to enable find_package ==================
 include(GNUInstallDirs)
+include(CMakePackageConfigHelpers)
+
 set(INCLUDE_INSTALL_DIR
-    ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}
+    "${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}"
     CACHE PATH
     "Location of header files"
 )
 
-include(CMakePackageConfigHelpers)
-
 configure_package_config_file(
     "${CMAKE_CURRENT_SOURCE_DIR}/cmake/install.cmake.in"
     "${PROJECT_NAME}Config.cmake"
-    INSTALL_DESTINATION lib/cmake/${PROJECT_NAME}
+    INSTALL_DESTINATION "lib/cmake/${PROJECT_NAME}"
     PATH_VARS INCLUDE_INSTALL_DIR
 )
 
 install(
-    EXPORT ${PROJECT_NAME}Targets
-    FILE ${PROJECT_NAME}Targets.cmake
-    DESTINATION lib/cmake/${PROJECT_NAME}
+    EXPORT "${PROJECT_NAME}Targets"
+    FILE "${PROJECT_NAME}Targets.cmake"
+    DESTINATION "lib/cmake/${PROJECT_NAME}"
 )
 
 install(
     FILES "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
-    DESTINATION lib/cmake/${PROJECT_NAME}
+    DESTINATION "lib/cmake/${PROJECT_NAME}"
 )
 
 # ================== Uninstall target ==================
