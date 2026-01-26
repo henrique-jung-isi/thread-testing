@@ -20,6 +20,10 @@ cmake --build .
 sudo cmake --install .
 ```
 
+# Using the library in your own project
+
+See [examples](examples/)
+
 # Uninstallation
 
 Use the target `uninstall`. In the root of the project run:

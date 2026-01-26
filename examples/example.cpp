@@ -8,7 +8,6 @@
 #include <vector>
 
 using namespace std;
-// template class AnotherPersistentThread<string, double, double>;
 
 struct Example {
   string operation(double a, double b) {
