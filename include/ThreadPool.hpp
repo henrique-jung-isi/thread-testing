@@ -10,13 +10,15 @@
 #include <vector>
 
 class ThreadPool {
+  template <class F, class... Args>
+  using result_of = std::invoke_result_t<F, Args...>;
+
 public:
   ThreadPool(size_t num_threads = std::thread::hardware_concurrency());
   ~ThreadPool();
 
   template <class F, class... Args>
-  std::future<typename std::invoke_result_t<F, Args...>>
-  enqueue(F &&f, Args &&...args);
+  std::future<result_of<F, Args...>> enqueue(F &&f, Args &&...args);
 
 private:
   std::vector<std::thread> _threads;
@@ -49,12 +51,10 @@ inline ThreadPool::ThreadPool(size_t num_threads) {
 
 inline ThreadPool::~ThreadPool() {
   {
-    std::unique_lock<std::mutex> lock(_mutex);
+    std::lock_guard lock(_mutex);
     _stop = true;
   }
-
   _cv.notify_all();
-
   for (auto &thread : _threads) {
     thread.join();
   }
@@ -63,12 +63,10 @@ inline ThreadPool::~ThreadPool() {
 template <class F, class... Args>
 inline std::future<std::invoke_result_t<F, Args...>>
 ThreadPool::enqueue(F &&f, Args &&...args) {
-  using R = std::invoke_result_t<F, Args...>;
-
   // Previous approach:
   // std::bind(std::forward<F>(f), std::forward<Args>(args)...)
   auto tuple = std::make_tuple(std::forward<Args>(args)...);
-  auto task = std::make_shared<std::packaged_task<R()>>(
+  auto task = std::make_shared<std::packaged_task<result_of<F, Args...>()>>(
       [f = std::forward<F>(f), args = std::move(tuple)]() mutable {
         return std::apply(
             [&f](auto &&...xs) {
